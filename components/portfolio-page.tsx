@@ -91,10 +91,10 @@ export function PortfolioPage() {
           <div className="hidden items-center gap-2 md:flex">
             <ThemeToggle />
             <a href="/api/resume" target="_blank" rel="noreferrer">
-              <Button variant="outline" className="rounded-full">Resume</Button>
+              <Button variant="outline" size="default" className="rounded-full">Resume</Button>
             </a>
             <Link href="#contact">
-              <Button className="rounded-full">Hire Me</Button>
+              <Button size="default" className="rounded-full">Hire Me</Button>
             </Link>
           </div>
           <button className="md:hidden" onClick={() => setMenuOpen((p) => !p)} aria-label="Toggle menu">
@@ -264,10 +264,10 @@ export function PortfolioPage() {
             <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">Open or download resume (served from backend API).</p>
             <div className="mt-3 flex flex-wrap gap-2">
               <a href="/api/resume" target="_blank" rel="noreferrer">
-                <Button variant="outline" size="sm" className="rounded-full"><FileText className="h-4 w-4" /> View Resume</Button>
+                <Button variant="outline" size="default" className="rounded-full"><FileText className="h-4 w-4" /> View Resume</Button>
               </a>
               <a href="/api/resume?download=1">
-                <Button size="sm" className="rounded-full"><Download className="h-4 w-4" /> Download Resume</Button>
+                <Button size="default" className="rounded-full"><Download className="h-4 w-4" /> Download Resume</Button>
               </a>
             </div>
           </div>
