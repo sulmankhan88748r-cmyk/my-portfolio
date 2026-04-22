@@ -183,7 +183,6 @@ export function PortfolioPage() {
         </section>
 
         <section id="skills" className="space-y-12">
-          <SectionTitle label="SKILLS / TECHNOLOGIES" title="Floating Tech Cloud" centered />
           <SkillsCloud />
         </section>
 

@@ -49,9 +49,12 @@ const skills: SkillBubble[] = [
 ];
 
 const glowClasses = {
-  cyan: "border-cyan-300/70 text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.35)]",
-  purple: "border-purple-300/70 text-purple-100 shadow-[0_0_18px_rgba(168,85,247,0.35)]",
-  blue: "border-blue-300/70 text-blue-100 shadow-[0_0_18px_rgba(96,165,250,0.35)]",
+  cyan:
+    "border-cyan-300/80 text-cyan-700 shadow-[0_0_12px_rgba(34,211,238,0.22)] dark:border-cyan-300/70 dark:text-cyan-100 dark:shadow-[0_0_18px_rgba(34,211,238,0.35)]",
+  purple:
+    "border-purple-300/80 text-purple-700 shadow-[0_0_12px_rgba(168,85,247,0.2)] dark:border-purple-300/70 dark:text-purple-100 dark:shadow-[0_0_18px_rgba(168,85,247,0.35)]",
+  blue:
+    "border-blue-300/80 text-blue-700 shadow-[0_0_12px_rgba(96,165,250,0.2)] dark:border-blue-300/70 dark:text-blue-100 dark:shadow-[0_0_18px_rgba(96,165,250,0.35)]",
 } as const;
 
 export function SkillsCloud() {
@@ -75,11 +78,11 @@ export function SkillsCloud() {
 
   return (
     <section
-      className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden rounded-none bg-[#05070f] py-10 sm:py-14"
+      className="relative left-1/2 w-screen -translate-x-1/2 overflow-hidden rounded-none bg-slate-100 py-10 sm:py-14 dark:bg-[#05070f]"
       onPointerMove={onPointerMove}
       onPointerLeave={onPointerLeave}
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.08),transparent_55%),radial-gradient(circle_at_80%_70%,rgba(147,51,234,0.1),transparent_45%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.12),transparent_55%),radial-gradient(circle_at_80%_70%,rgba(168,85,247,0.12),transparent_45%)] dark:bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.08),transparent_55%),radial-gradient(circle_at_80%_70%,rgba(147,51,234,0.1),transparent_45%)]" />
       <div className="relative mx-auto h-[560px] w-full max-w-7xl px-4 sm:h-[620px] sm:px-6 lg:h-[680px]">
         {skills.map((skill, index) => (
           <SkillBubbleItem key={skill.name} skill={skill} index={index} pointerX={smoothX} pointerY={smoothY} />
@@ -131,14 +134,14 @@ function SkillBubbleItem({
           ease: "easeInOut",
         }}
         whileHover={{ scale: 1.08 }}
-        className={`group flex flex-col items-center justify-center rounded-full border bg-white/10 text-center backdrop-blur-md transition-all duration-300 hover:shadow-[0_0_35px_rgba(56,189,248,0.45)] ${glowClasses[skill.glow]}`}
+        className={`group flex flex-col items-center justify-center rounded-full border bg-white/80 text-center backdrop-blur-md transition-all duration-300 hover:shadow-[0_0_30px_rgba(37,99,235,0.28)] dark:bg-white/10 dark:hover:shadow-[0_0_35px_rgba(56,189,248,0.45)] ${glowClasses[skill.glow]}`}
         style={{ width: skill.size, height: skill.size }}
       >
         <Icon
           aria-hidden="true"
-          className="mb-1 text-[1.55rem] drop-shadow-[0_0_10px_rgba(56,189,248,0.35)] transition group-hover:brightness-125"
+          className="mb-1 text-[1.55rem] drop-shadow-[0_0_8px_rgba(37,99,235,0.25)] transition group-hover:brightness-110 dark:drop-shadow-[0_0_10px_rgba(56,189,248,0.35)] dark:group-hover:brightness-125"
         />
-        <span className="px-2 text-xs font-semibold tracking-wide text-white/80 transition group-hover:text-white">
+        <span className="px-2 text-xs font-semibold tracking-wide text-slate-700 transition group-hover:text-slate-900 dark:text-white/80 dark:group-hover:text-white">
           {skill.name}
         </span>
       </motion.div>
