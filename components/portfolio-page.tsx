@@ -2,14 +2,12 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   BriefcaseBusiness,
   CircleDot,
-  Download,
-  FileText,
   GraduationCap,
   Heart,
   Link2,
@@ -54,6 +52,8 @@ const container = {
 };
 
 export function PortfolioPage() {
+  const [showIntro, setShowIntro] = useState(true);
+  const hasPlayedIntroSoundRef = useRef(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [success, setSuccess] = useState(false);
   const {
@@ -72,8 +72,168 @@ export function PortfolioPage() {
 
   const year = useMemo(() => new Date().getFullYear(), []);
 
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setShowIntro(false);
+    }, 3600);
+
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!showIntro || hasPlayedIntroSoundRef.current) {
+      return;
+    }
+
+    const soundPlayedKey = "__portfolioIntroSoundPlayed";
+    const existingFlag = (window as Window & { [key: string]: boolean | undefined })[soundPlayedKey];
+    if (existingFlag) {
+      hasPlayedIntroSoundRef.current = true;
+      return;
+    }
+
+    const playIntroSound = () => {
+      try {
+        const AudioContextClass = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+
+        if (!AudioContextClass) {
+          return false;
+        }
+
+        const context = new AudioContextClass();
+        if (context.state === "suspended") {
+          context.close().catch(() => undefined);
+          return false;
+        }
+
+        const now = context.currentTime;
+        const master = context.createGain();
+        const filter = context.createBiquadFilter();
+        const tone = context.createOscillator();
+        const shimmer = context.createOscillator();
+
+        filter.type = "lowpass";
+        filter.frequency.setValueAtTime(520, now);
+        filter.frequency.exponentialRampToValueAtTime(5400, now + 1.15);
+
+        tone.type = "triangle";
+        tone.frequency.setValueAtTime(180, now);
+        tone.frequency.exponentialRampToValueAtTime(760, now + 1.15);
+
+        shimmer.type = "sine";
+        shimmer.frequency.setValueAtTime(620, now);
+        shimmer.frequency.exponentialRampToValueAtTime(1080, now + 0.85);
+
+        master.gain.setValueAtTime(0.0001, now);
+        master.gain.exponentialRampToValueAtTime(0.05, now + 0.18);
+        master.gain.exponentialRampToValueAtTime(0.022, now + 0.65);
+        master.gain.exponentialRampToValueAtTime(0.0001, now + 1.22);
+
+        tone.connect(filter);
+        shimmer.connect(filter);
+        filter.connect(master);
+        master.connect(context.destination);
+
+        tone.start(now);
+        shimmer.start(now + 0.03);
+        tone.stop(now + 1.25);
+        shimmer.stop(now + 1.1);
+
+        window.setTimeout(() => {
+          context.close().catch(() => undefined);
+        }, 1600);
+
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
+    const playedImmediately = playIntroSound();
+    if (playedImmediately) {
+      hasPlayedIntroSoundRef.current = true;
+      (window as Window & { [key: string]: boolean | undefined })[soundPlayedKey] = true;
+      return;
+    }
+
+    const onFirstInteraction = () => {
+      const played = playIntroSound();
+      if (played) {
+        hasPlayedIntroSoundRef.current = true;
+        (window as Window & { [key: string]: boolean | undefined })[soundPlayedKey] = true;
+      }
+    };
+
+    window.addEventListener("pointerdown", onFirstInteraction, { once: true });
+    window.addEventListener("keydown", onFirstInteraction, { once: true });
+
+    return () => {
+      window.removeEventListener("pointerdown", onFirstInteraction);
+      window.removeEventListener("keydown", onFirstInteraction);
+    };
+  }, [showIntro]);
+
   return (
     <>
+      <AnimatePresence>
+        {showIntro ? (
+          <motion.div
+            key="intro-overlay"
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, transition: { duration: 1.1, ease: [0.22, 1, 0.36, 1] } }}
+            className="pointer-events-none fixed inset-0 z-[120] flex items-center justify-center overflow-hidden bg-[#04050b]"
+            aria-hidden="true"
+          >
+            <motion.div
+              animate={{ opacity: [0.78, 1, 0.84], scale: [1, 1.02, 1] }}
+              transition={{ duration: 2.4, repeat: Number.POSITIVE_INFINITY, ease: "easeInOut" }}
+              className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(56,189,248,0.12),transparent_42%),radial-gradient(circle_at_80%_70%,rgba(168,85,247,0.14),transparent_45%)]"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.965, filter: "blur(14px)" }}
+              animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+              transition={{ duration: 1.35, ease: [0.16, 1, 0.3, 1] }}
+              className="relative px-6 text-center"
+            >
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.75, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                className="mb-3 text-[11px] uppercase tracking-[0.5em] text-white/65"
+              >
+                Portfolio
+              </motion.p>
+              <motion.h1
+                initial={{ opacity: 0, y: 22, letterSpacing: "0.24em" }}
+                animate={{ opacity: 1, y: 0, letterSpacing: "0.08em" }}
+                transition={{ duration: 1.15, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                className="bg-gradient-to-r from-white via-slate-200 to-blue-200 bg-clip-text text-4xl font-bold text-transparent sm:text-5xl"
+              >
+                Suleman Khan
+              </motion.h1>
+              <motion.div
+                initial={{ scaleX: 0, opacity: 0.35 }}
+                animate={{ scaleX: 1, opacity: [0.35, 0.8, 0.35] }}
+                transition={{ duration: 1.3, delay: 0.65, ease: [0.22, 1, 0.36, 1] }}
+                className="mx-auto mt-4 h-px w-48 origin-center bg-gradient-to-r from-transparent via-cyan-200 to-transparent"
+              />
+              <motion.div
+                initial={{ x: "-120%", opacity: 0 }}
+                animate={{ x: "125%", opacity: [0, 0.92, 0] }}
+                transition={{ duration: 1.15, delay: 1.2, ease: [0.22, 1, 0.36, 1] }}
+                className="absolute left-0 top-1/2 h-[1px] w-full -translate-y-1/2 bg-gradient-to-r from-transparent via-white/75 to-transparent"
+              />
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+
+      <motion.div
+        initial={false}
+        animate={{ opacity: showIntro ? 0.45 : 1, y: showIntro ? 6 : 0 }}
+        transition={{ duration: showIntro ? 0.25 : 0.9, ease: [0.22, 1, 0.36, 1] }}
+      >
       <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
         <nav className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
           <Link href="#home" className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
@@ -82,7 +242,7 @@ export function PortfolioPage() {
           <ul className="hidden items-center gap-7 md:flex">
             {navItems.map((item) => (
               <li key={item}>
-                <Link href={`#${item.toLowerCase()}`} className="text-sm font-medium text-slate-600 transition hover:text-blue-600 dark:text-slate-300">
+                <Link href={`#${item.toLowerCase()}`} className="text-sm font-medium text-slate-800 transition hover:text-blue-600 dark:text-slate-300">
                   {item}
                 </Link>
               </li>
@@ -131,7 +291,7 @@ export function PortfolioPage() {
               Hi, I&apos;m <span className="text-slate-900 dark:text-slate-50">Suleman </span>
               <span className="text-blue-600">Khan</span>
             </h1>
-            <p className="max-w-xl text-lg text-slate-600 dark:text-slate-300">
+            <p className="max-w-xl text-lg text-slate-800 dark:text-slate-300">
               Flutter Mobile App Developer · Dart Programmer · UI Enthusiast. Building modern, responsive mobile applications with passion and creativity.
             </p>
             <div className="flex flex-wrap gap-3">
@@ -161,7 +321,7 @@ export function PortfolioPage() {
         </section>
 
         <SectionTitle id="about" label="ABOUT" title="Crafting mobile apps that turn ideas into real products" highlight="ideas into real products" centered />
-        <p className="mx-auto -mt-16 max-w-4xl text-center text-slate-600 dark:text-slate-300">
+        <p className="mx-auto -mt-16 max-w-4xl text-center text-slate-800 dark:text-slate-300">
           I&apos;m Suleman, a passionate Flutter Mobile App Developer specializing in Dart, Firebase, and clean UI design. With one year of hands-on client experience, I help brands launch fast, responsive mobile applications — and I&apos;m actively looking for remote opportunities to grow with great teams.
         </p>
         <div className="grid gap-6 md:grid-cols-3">
@@ -170,15 +330,21 @@ export function PortfolioPage() {
           <InfoCard icon={<GraduationCap className="h-5 w-5 text-blue-600" />} title="Continuous Learner" text="Always exploring new tools, plugins, and modern workflows to improve speed and quality." />
         </div>
 
-        <section id="services" className="space-y-12">
-          <SectionTitle label="MOBILE APP SERVICES" title="What I can build for your app" centered />
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            <ServiceCard icon={<CircleDot className="h-5 w-5 text-blue-600" />} title="Flutter App Development" text="Custom Flutter apps tailored to your product goals, fast and scalable." />
-            <ServiceCard icon={<BriefcaseBusiness className="h-5 w-5 text-blue-600" />} title="Business Mobile Apps" text="Conversion-focused mobile apps that help users take action." />
-            <ServiceCard icon={<UserRoundCheck className="h-5 w-5 text-blue-600" />} title="App UI Screens" text="Clean, high-converting app screens built for usability and growth." />
-            <ServiceCard icon={<CircleDot className="h-5 w-5 text-blue-600" />} title="App Redesign" text="Modernize outdated apps with a smooth, mobile-first experience." />
-            <ServiceCard icon={<Palette className="h-5 w-5 text-blue-600" />} title="Mobile UI Design" text="Clean, modern app interfaces designed around user experience." />
-            <ServiceCard icon={<Search className="h-5 w-5 text-blue-600" />} title="App Performance Optimization" text="Improve app speed, responsiveness, and overall performance." />
+        <section id="services" className="relative isolate overflow-hidden rounded-3xl border border-slate-200/70 bg-white/70 p-6 shadow-[0_20px_60px_-32px_rgba(15,23,42,0.35)] backdrop-blur-sm dark:border-slate-800/80 dark:bg-slate-900/60 sm:p-8 lg:p-10">
+          <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.14),transparent_45%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.1),transparent_50%)] dark:bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.2),transparent_45%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.16),transparent_50%)]" />
+          <div className="space-y-12">
+            <SectionTitle label="MOBILE APP SERVICES" title="What I can build for your app" centered />
+            <p className="-mt-8 mx-auto max-w-2xl text-center text-sm text-slate-800 dark:text-slate-300 sm:text-base">
+              End-to-end mobile app support from product-focused UI to launch-ready performance, designed to keep your users engaged.
+            </p>
+            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              <ServiceCard icon={<CircleDot className="h-5 w-5 text-blue-600" />} title="Flutter App Development" text="Custom Flutter apps tailored to your product goals, fast and scalable." featured />
+              <ServiceCard icon={<BriefcaseBusiness className="h-5 w-5 text-blue-600" />} title="Business Mobile Apps" text="Conversion-focused mobile apps that help users take action." featured />
+              <ServiceCard icon={<UserRoundCheck className="h-5 w-5 text-blue-600" />} title="App UI Screens" text="Clean, high-converting app screens built for usability and growth." />
+              <ServiceCard icon={<CircleDot className="h-5 w-5 text-blue-600" />} title="App Redesign" text="Modernize outdated apps with a smooth, mobile-first experience." />
+              <ServiceCard icon={<Palette className="h-5 w-5 text-blue-600" />} title="Mobile UI Design" text="Clean, modern app interfaces designed around user experience." />
+              <ServiceCard icon={<Search className="h-5 w-5 text-blue-600" />} title="App Performance Optimization" text="Improve app speed, responsiveness, and overall performance." />
+            </div>
           </div>
         </section>
 
@@ -197,31 +363,18 @@ export function PortfolioPage() {
         <section id="apps" className="space-y-10">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <SectionTitle label="APP PROJECTS" title="Recent app projects" />
-            <p className="max-w-md text-slate-600 dark:text-slate-300">A selection of mobile apps I&apos;ve designed and developed over the past year.</p>
+            <p className="max-w-md text-slate-800 dark:text-slate-300">A selection of mobile apps I&apos;ve designed and developed over the past year.</p>
           </div>
           <div className="grid gap-6 md:grid-cols-3">
             <ProjectCard gradient="from-blue-600 to-cyan-500" title="Corporate Business App" text="Modern mobile app with services, team info, and lead generation flow." tags={["Flutter", "Dart", "Firebase"]} />
             <ProjectCard gradient="from-orange-500 to-pink-500" title="Restaurant Ordering App" text="User-friendly app with menu browsing, reservations, and map integration." tags={["Flutter", "UI Design", "Responsive"]} />
             <ProjectCard gradient="from-teal-500 to-emerald-400" title="Real Estate App" text="Property listings with filters, gallery, and inquiry forms — fully responsive." tags={["Flutter", "State Management", "Firebase"]} />
           </div>
-          <Card className="border-blue-200/70 bg-gradient-to-br from-blue-50 to-cyan-50 dark:border-blue-900/60 dark:from-slate-900 dark:to-slate-900">
-            <CardContent className="p-6">
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Skills used in projects</h3>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">Core technologies I use in real client builds.</p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {["HTML", "CSS", "JavaScript", "React", "Node.js", "Flutter", "Dart", "Next.js"].map((skill) => (
-                  <span key={skill} className="rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
         </section>
 
         <section id="contact" className="space-y-12">
           <SectionTitle label="CONTACT" title="Let&apos;s build something together" centered />
-          <p className="-mt-10 text-center text-slate-600 dark:text-slate-300">Have a project in mind or a remote role to discuss? I&apos;d love to hear from you.</p>
+          <p className="-mt-10 text-center text-slate-800 dark:text-slate-300">Have a project in mind or a remote role to discuss? I&apos;d love to hear from you.</p>
           <div className="grid gap-8 lg:grid-cols-2">
             <div className="space-y-4">
               <ContactInfo icon={<Mail className="h-5 w-5 text-blue-600" />} text="sulmankhan88748r@gmail.com" />
@@ -256,20 +409,8 @@ export function PortfolioPage() {
         </section>
       </main>
 
-      <footer className="border-t border-slate-200 py-8 text-center text-sm text-slate-500 dark:border-slate-800 dark:text-slate-300">
+      <footer className="border-t border-slate-200 py-8 text-center text-sm text-slate-800 dark:border-slate-800 dark:text-slate-300">
         <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-4 px-4 sm:px-6">
-          <div className="w-full max-w-xl rounded-xl border border-slate-200 bg-white/70 p-4 text-left shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
-            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">Resume</p>
-            <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">Open or download resume (served from backend API).</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <a href="/api/resume" target="_blank" rel="noreferrer">
-                <Button variant="outline" size="default" className="rounded-full"><FileText className="h-4 w-4" /> View Resume</Button>
-              </a>
-              <a href="/api/resume?download=1">
-                <Button size="default" className="rounded-full"><Download className="h-4 w-4" /> Download Resume</Button>
-              </a>
-            </div>
-          </div>
           <span>© {year} Suleman Khan. All rights reserved.</span>
         </div>
       </footer>
@@ -282,6 +423,7 @@ export function PortfolioPage() {
       >
         <MessageCircle className="h-7 w-7" />
       </a>
+      </motion.div>
     </>
   );
 }
@@ -313,11 +455,57 @@ function SectionTitle({
 }
 
 function InfoCard({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
-  return <Card className="transition duration-300 hover:-translate-y-1 hover:shadow-lg"><CardHeader><div className="mb-3 inline-flex rounded-full bg-blue-50 p-3">{icon}</div><CardTitle>{title}</CardTitle></CardHeader><CardContent><p className="text-slate-600 dark:text-slate-300">{text}</p></CardContent></Card>;
+  return <Card className="transition duration-300 hover:-translate-y-1 hover:shadow-lg"><CardHeader><div className="mb-3 inline-flex rounded-full bg-blue-50 p-3">{icon}</div><CardTitle>{title}</CardTitle></CardHeader><CardContent><p className="text-slate-800 dark:text-slate-300">{text}</p></CardContent></Card>;
 }
 
-function ServiceCard({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
-  return <Card className="transition duration-300 hover:shadow-lg"><CardHeader><div className="mb-3 inline-flex rounded-full bg-blue-50 p-3">{icon}</div><CardTitle>{title}</CardTitle></CardHeader><CardContent><p className="text-slate-600 dark:text-slate-300">{text}</p></CardContent></Card>;
+function ServiceCard({
+  icon,
+  title,
+  text,
+  featured,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  text: string;
+  featured?: boolean;
+}) {
+  return (
+    <motion.article
+      whileInView={{ opacity: [0, 1], y: [18, 0] }}
+      viewport={{ once: true, amount: 0.25 }}
+      transition={{ duration: 0.45, ease: "easeOut" }}
+      whileHover={{ y: -6 }}
+      className="h-full"
+    >
+      <Card
+        className={cn(
+          "group relative h-full overflow-hidden border-slate-200/80 bg-white/80 transition-all duration-300 hover:border-blue-200 hover:shadow-[0_16px_36px_-20px_rgba(37,99,235,0.45)] dark:border-slate-700/80 dark:bg-slate-900/80 dark:hover:border-blue-800",
+          featured ? "ring-1 ring-blue-200/70 dark:ring-blue-800/70" : "",
+        )}
+      >
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue-500/[0.08] via-transparent to-cyan-400/[0.08] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+        <CardHeader className="relative">
+          <div className="mb-3 inline-flex w-fit items-center gap-2 rounded-full border border-blue-100 bg-blue-50/90 px-3 py-2 text-sm font-medium shadow-sm dark:border-blue-900/60 dark:bg-blue-950/50">
+            {icon}
+            <span className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700 dark:text-blue-300">
+              Service
+            </span>
+          </div>
+          <div className="flex items-start justify-between gap-3">
+            <CardTitle>{title}</CardTitle>
+            {featured ? (
+              <span className="rounded-full bg-blue-600 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-white">
+                Popular
+              </span>
+            ) : null}
+          </div>
+        </CardHeader>
+        <CardContent className="relative">
+          <p className="text-slate-800 dark:text-slate-300">{text}</p>
+        </CardContent>
+      </Card>
+    </motion.article>
+  );
 }
 
 function Timeline({
@@ -338,8 +526,8 @@ function Timeline({
             <span className="absolute -left-[33px] top-1 h-4 w-4 rounded-full bg-blue-600 ring-4 ring-blue-100 dark:ring-blue-950" />
             <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">{date}</p>
             <h3 className="mt-1 text-lg font-semibold text-slate-900 dark:text-white">{heading}</h3>
-            <p className="text-sm font-medium text-slate-600 dark:text-slate-300">{status}</p>
-            <p className="mt-2 text-slate-600 dark:text-slate-300">{desc}</p>
+            <p className="text-sm font-medium text-slate-800 dark:text-slate-300">{status}</p>
+            <p className="mt-2 text-slate-800 dark:text-slate-300">{desc}</p>
           </div>
         ))}
       </div>
@@ -363,7 +551,7 @@ function ProjectCard({
       <div className={cn("h-36 bg-gradient-to-br p-4 text-right text-white", gradient)}>↗</div>
       <CardContent className="space-y-4 p-5">
         <h3 className="text-xl font-semibold text-slate-900 dark:text-white">{title}</h3>
-        <p className="text-slate-600 dark:text-slate-300">{text}</p>
+        <p className="text-slate-800 dark:text-slate-300">{text}</p>
         <div className="flex flex-wrap gap-2">
           {tags.map((tag) => <span key={tag} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-200">{tag}</span>)}
         </div>
