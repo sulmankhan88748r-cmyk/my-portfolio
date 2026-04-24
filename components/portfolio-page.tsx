@@ -36,6 +36,12 @@ import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
+declare global {
+  interface Window {
+    __portfolioIntroSoundPlayed?: boolean;
+  }
+}
+
 const navItems = ["Home", "About", "Services", "Skills", "Apps", "Contact"];
 
 const formSchema = z.object({
@@ -85,8 +91,7 @@ export function PortfolioPage() {
       return;
     }
 
-    const soundPlayedKey = "__portfolioIntroSoundPlayed";
-    const existingFlag = (window as Window & { [key: string]: boolean | undefined })[soundPlayedKey];
+    const existingFlag = window.__portfolioIntroSoundPlayed;
     if (existingFlag) {
       hasPlayedIntroSoundRef.current = true;
       return;
@@ -152,7 +157,7 @@ export function PortfolioPage() {
     const playedImmediately = playIntroSound();
     if (playedImmediately) {
       hasPlayedIntroSoundRef.current = true;
-      (window as Window & { [key: string]: boolean | undefined })[soundPlayedKey] = true;
+      window.__portfolioIntroSoundPlayed = true;
       return;
     }
 
@@ -160,7 +165,7 @@ export function PortfolioPage() {
       const played = playIntroSound();
       if (played) {
         hasPlayedIntroSoundRef.current = true;
-        (window as Window & { [key: string]: boolean | undefined })[soundPlayedKey] = true;
+        window.__portfolioIntroSoundPlayed = true;
       }
     };
 
