@@ -205,7 +205,7 @@ export function PortfolioPage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.75, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-                className="mb-3 text-[11px] uppercase tracking-[0.5em] text-white/65"
+                className="mb-3 text-[11px] uppercase tracking-[0.5em] text-slate-200/70"
               >
                 Portfolio
               </motion.p>
